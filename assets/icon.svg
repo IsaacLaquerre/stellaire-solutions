@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Engrenage a 8 dents, fond et alesage central transparents -->
+  <defs>
+    <linearGradient id="gearGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6FB2F2"/>
+      <stop offset="1" stop-color="#1E5FA8"/>
+    </linearGradient>
+    <mask id="hole" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <rect width="128" height="128" fill="white"/>
+      <circle cx="64" cy="64" r="20" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Le masque est sur le groupe exterieur pour rester en coordonnees 0..128 -->
+  <g mask="url(#hole)">
+    <g transform="translate(64 64)" fill="url(#gearGrad)">
+      <rect x="-8" y="-58" width="16" height="20" rx="4"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(45)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(90)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(135)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(180)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(225)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(270)"/>
+      <rect x="-8" y="-58" width="16" height="20" rx="4" transform="rotate(315)"/>
+      <circle r="45"/>
+    </g>
+  </g>
+</svg>

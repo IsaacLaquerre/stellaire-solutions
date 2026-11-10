@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none';" />
+  <title>Stellaire Solutions</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <!-- ==================================================== En-tête ===== -->
+  <header class="app-header">
+    <div class="brand">
+      <button type="button" class="brand-home" data-i18n-aria="home" aria-label="Retour au menu">
+        <img src="../assets/icon.svg" alt="" class="brand-icon" />
+      </button>
+      <div class="brand-text">
+        <span class="brand-title" data-i18n="appTitle">Stellaire Solutions</span>
+        <span class="brand-sub" data-i18n="appSub">Documents techniques · génération automatisée</span>
+      </div>
+    </div>
+    <button type="button" id="settingsBtn" class="icon-btn" data-i18n-aria="settings" aria-label="Paramètres">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ============================================== Menu principal ===== -->
+    <section id="view-home" class="view is-active">
+      <p class="view-eyebrow" data-i18n="homeEyebrow">Modules disponibles</p>
+      <h1 class="view-title" data-i18n="homeTitle">Que voulez-vous générer&nbsp;?</h1>
+
+      <div class="module-grid">
+        <button type="button" class="module-card" data-target="dpm">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8v1.6H8V12Zm0 3.4h8V17H8v-1.6Z"/></svg>
+          <span class="module-name" data-i18n="modDpm">Générateur DPM</span>
+          <span class="module-desc" data-i18n="modDpmDesc"></span>
+        </button>
+
+        <button type="button" class="module-card" data-target="formulaire">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 4v2h2V7H7Zm4 0v2h6V7h-6Zm-4 4v2h2v-2H7Zm4 0v2h6v-2h-6Zm-4 4v2h2v-2H7Zm4 0v2h6v-2h-6Z"/></svg>
+          <span class="module-name" data-i18n="modFormulaire">Générateur Formulaire DPM</span>
+          <span class="module-desc" data-i18n="modFormulaireDesc"></span>
+        </button>
+
+        <button type="button" class="module-card" data-target="takeoff">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.3 17.3 3l3.7 3.7L6.7 21H3v-3.7Zm3.2 1.5L18.9 6.7l-1.6-1.6L4.6 17.8l1.6 1Zm2-9.4 1.1 1.1 1.1-1.1-1.1-1.1-1.1 1.1Zm3.2-3.2 1.1 1.1 1.1-1.1-1.1-1.1-1.1 1.1Z"/></svg>
+          <span class="module-name" data-i18n="modTakeoff">Générateur TakeOff</span>
+          <span class="module-desc" data-i18n="modTakeoffDesc"></span>
+        </button>
+
+        <button type="button" class="module-card" data-target="rapport">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6a1 1 0 0 1 1 1v1h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V3a1 1 0 0 1 1-1Zm1 2v1h4V4h-4ZM7.8 12.3l2.1 2.1 4.6-4.6 1.2 1.2-5.8 5.8-3.3-3.3 1.2-1.2Z"/></svg>
+          <span class="module-name" data-i18n="modRapport">Générateur Rapport Inspection</span>
+          <span class="module-desc" data-i18n="modRapportDesc"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- =============================================== Générateur DPM ===== -->
+    <section id="view-dpm" class="view">
+      <button type="button" class="back-btn" data-i18n="back">← Retour au menu</button>
+      <p class="view-eyebrow" data-i18n="moduleEyebrow">Module</p>
+      <h1 class="view-title" data-i18n="modDpm">Générateur DPM</h1>
+
+      <form class="module-form" data-module="dpm" novalidate>
+        <div class="field">
+          <label class="field-label" for="dpm-qty" data-i18n="dpQty">Quantité de DP</label>
+          <input type="number" id="dpm-qty" class="text-input number-input" min="1" max="100" step="1" value="1" required />
+        </div>
+        <div class="field">
+          <span class="field-label" data-i18n="bordereau">Bordereau (.xlsx)</span>
+          <label class="file-drop" for="dpm-file">
+            <input type="file" id="dpm-file" accept=".xlsx" required />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3l4.5 4.5-1.4 1.4L13 6.8V15h-2V6.8L8.9 8.9 7.5 7.5 12 3ZM5 19h14v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4h2v4Z"/></svg>
+            <span class="file-drop-text" data-i18n="chooseFile">Choisir un fichier…</span>
+            <span class="file-drop-name"></span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" disabled data-i18n="submit">Lancer la génération</button>
+        </div>
+        <div class="form-status" aria-live="polite"></div>
+        <div class="result-box" hidden>
+          <span class="result-path"></span>
+          <button type="button" class="link-btn result-show" data-i18n="showItem">Afficher dans le dossier</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================================== Générateur Formulaire DPM ===== -->
+    <section id="view-formulaire" class="view">
+      <button type="button" class="back-btn" data-i18n="back">← Retour au menu</button>
+      <p class="view-eyebrow" data-i18n="moduleEyebrow">Module</p>
+      <h1 class="view-title" data-i18n="modFormulaire">Générateur Formulaire DPM</h1>
+
+      <form class="module-form" data-module="formulaire" novalidate>
+        <div class="field">
+          <span class="field-label" data-i18n="bordereau">Bordereau (.xlsx)</span>
+          <label class="file-drop" for="formulaire-file">
+            <input type="file" id="formulaire-file" accept=".xlsx" required />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3l4.5 4.5-1.4 1.4L13 6.8V15h-2V6.8L8.9 8.9 7.5 7.5 12 3ZM5 19h14v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4h2v4Z"/></svg>
+            <span class="file-drop-text" data-i18n="chooseFile">Choisir un fichier…</span>
+            <span class="file-drop-name"></span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" disabled data-i18n="submit">Lancer la génération</button>
+        </div>
+        <div class="form-status" aria-live="polite"></div>
+        <div class="result-box" hidden>
+          <span class="result-path"></span>
+          <button type="button" class="link-btn result-show" data-i18n="showItem">Afficher dans le dossier</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- =========================================== Générateur TakeOff ===== -->
+    <section id="view-takeoff" class="view">
+      <button type="button" class="back-btn" data-i18n="back">← Retour au menu</button>
+      <p class="view-eyebrow" data-i18n="moduleEyebrow">Module</p>
+      <h1 class="view-title" data-i18n="modTakeoff">Générateur TakeOff</h1>
+
+      <form class="module-form" data-module="takeoff" novalidate>
+        <div class="field">
+          <span class="field-label" data-i18n="bordereau">Bordereau (.xlsx)</span>
+          <label class="file-drop" for="takeoff-file">
+            <input type="file" id="takeoff-file" accept=".xlsx" required />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3l4.5 4.5-1.4 1.4L13 6.8V15h-2V6.8L8.9 8.9 7.5 7.5 12 3ZM5 19h14v-4h2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4h2v4Z"/></svg>
+            <span class="file-drop-text" data-i18n="chooseFile">Choisir un fichier…</span>
+            <span class="file-drop-name"></span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" disabled data-i18n="submit">Lancer la génération</button>
+        </div>
+        <div class="form-status" aria-live="polite"></div>
+        <div class="result-box" hidden>
+          <span class="result-path"></span>
+          <button type="button" class="link-btn result-show" data-i18n="showItem">Afficher dans le dossier</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ================================ Générateur Rapport Inspection ===== -->
+    <section id="view-rapport" class="view">
+      <button type="button" class="back-btn" data-i18n="back">← Retour au menu</button>
+      <p class="view-eyebrow" data-i18n="moduleEyebrow">Module</p>
+      <h1 class="view-title" data-i18n="modRapport">Générateur Rapport Inspection</h1>
+      <p class="note" data-i18n="rapportHint"></p>
+
+      <form class="module-form form-two-col" data-module="rapport" novalidate>
+        <div class="field">
+          <label class="field-label" for="r-fileNum" data-i18n="rFileNum">Numéro de dossier</label>
+          <input type="text" id="r-fileNum" name="fileNum" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-projectName" data-i18n="rProjectName">Nom du projet</label>
+          <input type="text" id="r-projectName" name="projectName" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-location" data-i18n="rLocation">Localisation d'entrave</label>
+          <input type="text" id="r-location" name="location" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-supervisor" data-i18n="rSupervisor">Surveillant</label>
+          <input type="text" id="r-supervisor" name="supervisor" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-signalManager" data-i18n="rSignalManager">Responsable en signalisation du surveillant</label>
+          <input type="text" id="r-signalManager" name="signalManager" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-signatory" data-i18n="rSignatory">Nom du signataire du formulaire</label>
+          <input type="text" id="r-signatory" name="signatory" class="text-input" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-startDate" data-i18n="rStartDate">Date de début</label>
+          <input type="text" id="r-startDate" name="startDate" class="text-input" placeholder="AAAA-MM-JJ" pattern="\d{4}-\d{2}-\d{2}" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-minHour" data-i18n="rMinHour">Heure minimum d'inspection</label>
+          <input type="text" id="r-minHour" name="minHour" class="text-input" placeholder="8" inputmode="numeric" pattern="\d{1,2}" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-maxHour" data-i18n="rMaxHour">Heure maximum d'inspection</label>
+          <input type="text" id="r-maxHour" name="maxHour" class="text-input" placeholder="17" inputmode="numeric" pattern="\d{1,2}" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="r-days" data-i18n="rDays">Nombre de jours à générer</label>
+          <input type="number" id="r-days" name="days" class="text-input number-input" min="1" max="366" step="1" required />
+        </div>
+
+        <div class="form-actions span-two">
+          <button type="submit" class="primary-btn" disabled data-i18n="submit">Lancer la génération</button>
+        </div>
+        <div class="form-status span-two" aria-live="polite"></div>
+        <div class="result-box span-two" hidden>
+          <span class="result-path"></span>
+          <button type="button" class="link-btn result-show" data-i18n="showItem">Afficher dans le dossier</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- ================================================== Paramètres ===== -->
+  <div id="settingsOverlay" class="overlay" hidden>
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-head">
+        <h2 id="settingsTitle" data-i18n="settings">Paramètres</h2>
+        <button type="button" id="settingsClose" class="icon-btn" data-i18n-aria="close" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <span class="settings-label" data-i18n="darkTheme">Thème sombre</span>
+          <span class="settings-hint" data-i18n="darkThemeHint">Interface à faible luminosité</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle" checked />
+          <span class="switch-track" aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <span class="settings-label" data-i18n="language">Langue</span>
+          <span class="settings-hint" data-i18n="languageHint">Interface et menus</span>
+        </div>
+        <div class="segment" role="radiogroup" data-i18n-aria="language" aria-label="Langue">
+          <label class="segment-option">
+            <input type="radio" name="lang" value="fr" checked />
+            <span>Français</span>
+          </label>
+          <label class="segment-option">
+            <input type="radio" name="lang" value="en" />
+            <span>English</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
