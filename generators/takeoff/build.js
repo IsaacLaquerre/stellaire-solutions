@@ -2,6 +2,7 @@
 // "Frais Généraux" (site overhead) and "Bordereau Balancé" (price balance).
 import { clone, numberOr, SheetBuilder } from '../shared/excel.js';
 import { LAYOUT, slipsWithRows } from '../shared/bordereau.js';
+import { DEFAULT_LABOUR_COST } from './options.js';
 import { BALANCE_SLIP_END, COLUMN_WIDTHS, FRAIS_GENERAUX, FRAIS_SIDE_NOTES, ROWS, fraisSectionRow } from './templates.js';
 
 export const SHEETS = { takeOff: 'Take Off', frais: 'Frais Généraux', balance: 'Bordereau Balancé' };
@@ -56,10 +57,14 @@ function takeOffArticle(sheet, slip, row) {
     }
 }
 
-function buildTakeOff(parsed, now) {
+// Column X of the first header row; the footer reads it as $X$1.
+const LABOUR_COST_CELL = 23;
+
+function buildTakeOff(parsed, now, labourCost) {
     const sheet = new SheetBuilder();
     const header = clone(ROWS.takeOff.header);
     header[0][8].value = projectLabel(parsed.metadata);
+    header[0][LABOUR_COST_CELL].value = labourCost;
     header[2][17].value = now.toLocaleDateString('fr-CA');
     sheet.push(...header);
 
@@ -228,9 +233,9 @@ function buildBalance(parsed, takeOffSubtotal, fraisFooter) {
 }
 
 // Sheet list for write-excel-file.
-export function buildTakeOffWorkbook(parsed, { now = new Date() } = {}) {
+export function buildTakeOffWorkbook(parsed, { now = new Date(), labourCost = DEFAULT_LABOUR_COST } = {}) {
     slipsWithRows(parsed);
-    const takeOff = buildTakeOff(parsed, now);
+    const takeOff = buildTakeOff(parsed, now, labourCost);
     const frais = buildFrais(parsed, takeOff.subtotal);
     const balance = buildBalance(parsed, takeOff.subtotal, frais.footerStart);
     const widths = (list) => list.map((width) => ({ width }));

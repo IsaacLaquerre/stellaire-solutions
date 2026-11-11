@@ -100,10 +100,23 @@ async function run() {
         assert.deepEqual(sheetNames(r.path).slice(0, 2), ['Rapport Comparatif', 'Demande de paiement']);
     });
 
-    await check('TakeOff generates its workbook', async () => {
-        const r = await page(`${pick('takeoff-file')} ${submit('takeoff')}`);
+    await check('TakeOff generates its workbook with the labour cost', async () => {
+        const r = await page(`const cost = document.getElementById('takeoff-labour');
+            const initial = { value: cost.value, placeholder: cost.placeholder };
+            cost.value = '95.5'; cost.dispatchEvent(new Event('input', { bubbles: true }));
+            ${pick('takeoff-file')} return { initial, ...(await (async () => { ${submit('takeoff')} })()) };`);
+        assert.deepEqual(r.initial, { value: '87', placeholder: '87' });
         assert.match(r.status, /is-ok/, r.text);
-        assert.deepEqual(sheetNames(r.path), ['Take Off', 'Frais Généraux', 'Bordereau Balancé']);
+        const sheets = xlsx.parse(fs.readFileSync(r.path));
+        assert.deepEqual(sheets.map((s) => s.name), ['Take Off', 'Frais Généraux', 'Bordereau Balancé']);
+        // Last cell of row 1 (X1); the parser skips the empty column A.
+        assert.equal(sheets[0].data[0].at(-1), 95.5, 'cell X1 holds the labour cost');
+    });
+
+    await check('the labour cost is remembered after a restart of the page', async () => {
+        await new Promise((resolve) => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
+        const cost = await page(`const el = document.getElementById('takeoff-labour'); return { value: el.value, placeholder: el.placeholder };`);
+        assert.deepEqual(cost, { value: '95.5', placeholder: '95.5' });
     });
 
     await check('Rapport Inspection generates one PDF per day', async () => {

@@ -26,6 +26,7 @@ export const I18N = {
         modRapportDesc: "Génère les rapports journaliers d'inspection.",
 
         dpQty: 'Quantité de DP',
+        labourCost: "Coût main d'oeuvre",
         rFileNum: 'Numéro de dossier',
         rProjectName: 'Nom du projet',
         rLocation: "Localisation d'entrave",
@@ -87,6 +88,7 @@ export const I18N = {
         modRapportDesc: 'Generates daily inspection reports.',
 
         dpQty: 'Number of DPs',
+        labourCost: 'Labour cost',
         rFileNum: 'File number',
         rProjectName: 'Project name',
         rLocation: 'Obstruction location',

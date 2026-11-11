@@ -12,6 +12,12 @@ export function isValidDpCount(text) {
     return isIntIn(String(text).trim(), 1, MAX_DP);
 }
 
+// Empty falls back to the default cost on the main side.
+export function isValidLabourCost(text) {
+    const value = String(text).trim();
+    return value === '' || (Number.isFinite(Number(value)) && Number(value) >= 0);
+}
+
 // yyyy-mm-dd that is a real calendar date.
 export function isValidDate(text) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);

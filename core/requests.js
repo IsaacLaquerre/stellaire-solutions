@@ -4,6 +4,7 @@
 import path from 'node:path';
 import { GENERATORS, isGenerator } from '../generators/registry.js';
 import { validateDpCount } from '../generators/dpm/options.js';
+import { validateLabourCost } from '../generators/takeoff/options.js';
 import { normalizeFields } from '../generators/rapport-inspection/fields.js';
 import { RequestError, failure } from './errors.js';
 import { runJob as defaultRunJob } from './jobs.js';
@@ -18,12 +19,11 @@ function workerInput(id, payload) {
     if (spec.input === 'file') {
         const { bytes } = validateUpload(payload.file, { extensions: spec.extensions });
         const input = { bytes };
-        if (id === 'dpm') {
-            try {
-                input.dpCount = validateDpCount(payload.dpCount);
-            } catch (err) {
-                throw new RequestError('invalid-input', err.message);
-            }
+        try {
+            if (id === 'dpm') input.dpCount = validateDpCount(payload.dpCount);
+            if (id === 'takeoff') input.labourCost = validateLabourCost(payload.labourCost);
+        } catch (err) {
+            throw new RequestError('invalid-input', err.message);
         }
         return input;
     }
