@@ -3,6 +3,7 @@
 import { app, BrowserWindow } from 'electron';
 import { registerIpc } from './ipc.js';
 import { buildMenu } from './menu.js';
+import { checkForUpdates, registerUpdater } from './updater.js';
 import { createWindow, denyPermissions } from './window.js';
 
 export async function startApp({ outputDir = () => app.getPath('downloads'), generatorOptions } = {}) {
@@ -17,6 +18,8 @@ export async function startApp({ outputDir = () => app.getPath('downloads'), gen
     buildMenu('fr', { outputDir });
 
     let win = createWindow();
+    registerUpdater({ getWindow: () => win });
+    checkForUpdates();
     app.on('second-instance', () => {
         if (win.isMinimized()) win.restore();
         win.focus();

@@ -66,7 +66,7 @@ async function run() {
         const info = await page(`return { api: typeof window.api, keys: Object.keys(window.api).sort(), cards: document.querySelectorAll('.module-card').length,
             title: document.querySelector('.brand-title').textContent, node: typeof require };`);
         assert.equal(info.api, 'object');
-        assert.deepEqual(info.keys, ['generate', 'setLanguage', 'showItem']);
+        assert.deepEqual(info.keys, ['generate', 'installUpdate', 'onUpdateReady', 'pendingUpdate', 'setLanguage', 'showItem']);
         assert.equal(info.cards, 4);
         assert.equal(info.title, 'Stellaire Solutions');
         assert.equal(info.node, 'undefined', 'Node must not be reachable from the page');
@@ -160,6 +160,26 @@ async function run() {
         assert.match(r.status, /recognized bid schedule/);
         assert.equal(r.theme, 'light');
         assert.ok(r.closed);
+    });
+
+    await check('a downloaded update shows the prompt, and Later moves it to settings', async () => {
+        const hidden = await page(`return document.getElementById('updateOverlay').hidden;`);
+        win.webContents.send('update-ready', { version: '9.9.9', url: 'https://github.com/IsaacLaquerre/stellaire-solutions/releases/tag/v9.9.9' });
+        await new Promise((r) => setTimeout(r, 200));
+        const r = await page(`
+            const shown = !document.getElementById('updateOverlay').hidden;
+            const body = document.getElementById('updateBody').textContent;
+            const link = document.getElementById('updateLink').href;
+            document.getElementById('updateLater').click();
+            return { shown, body, link, closed: document.getElementById('updateOverlay').hidden,
+                     row: !document.getElementById('updateRow').hidden, hint: document.getElementById('updateRowHint').textContent };`);
+        assert.ok(hidden, 'no prompt before an update is downloaded');
+        assert.ok(r.shown);
+        assert.match(r.body, /9\.9\.9/);
+        assert.match(r.link, /releases\/tag\/v9\.9\.9$/);
+        assert.ok(r.closed);
+        assert.ok(r.row);
+        assert.equal(r.hint, 'Version 9.9.9');
     });
 
     await check('the page cannot open other files in the explorer or navigate away', async () => {

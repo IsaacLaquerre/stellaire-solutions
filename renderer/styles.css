@@ -619,3 +619,22 @@ body {
   background: var(--accent);
   color: var(--accent-ink);
 }
+
+/* --------------------------------------------------------- Mise à jour -- */
+
+.update-body { margin: 0 0 10px; font-size: 14px; line-height: 1.5; }
+
+.update-link {
+  display: inline-block;
+  font-size: 13.5px;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.small-btn { padding: 7px 14px; font-size: 13.5px; }

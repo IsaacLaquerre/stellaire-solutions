@@ -250,6 +250,28 @@
           </label>
         </div>
       </div>
+
+      <div class="settings-row" id="updateRow" hidden>
+        <div>
+          <span class="settings-label" data-i18n="updateNowTitle">Mise à jour prête</span>
+          <span class="settings-hint" id="updateRowHint"></span>
+        </div>
+        <button type="button" id="updateNow" class="primary-btn small-btn" data-i18n="updateNow">Mettre à jour</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="updateOverlay" class="overlay" hidden>
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+      <div class="settings-head">
+        <h2 id="updateTitle" data-i18n="updateTitle">Mise à jour disponible</h2>
+      </div>
+      <p class="update-body" id="updateBody"></p>
+      <a id="updateLink" class="update-link" href="#" target="_blank" rel="noopener" data-i18n="updateNotes">Voir les nouveautés</a>
+      <div class="update-actions">
+        <button type="button" id="updateLater" class="link-btn" data-i18n="updateLater">Plus tard</button>
+        <button type="button" id="updateRestart" class="primary-btn" data-i18n="updateRestart">Redémarrer maintenant</button>
+      </div>
     </div>
   </div>
 </body>

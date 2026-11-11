@@ -44,6 +44,15 @@ export const I18N = {
         language: 'Langue',
         languageHint: 'Interface et menus',
 
+        updateTitle: 'Mise à jour disponible',
+        updateBody: "La version {version} est téléchargée. L'application redémarrera pour l'installer.",
+        updateNotes: 'Voir les nouveautés',
+        updateLater: 'Plus tard',
+        updateRestart: 'Redémarrer maintenant',
+        updateNowTitle: 'Mise à jour prête',
+        updateNowHint: 'Version {version}',
+        updateNow: 'Mettre à jour',
+
         running: 'Génération en cours…',
         runningRapport: "En attente de la fermeture de PDF-XChange Editor, puis génération…",
         fileDone: 'Fichier créé dans le dossier Téléchargements.',
@@ -105,6 +114,15 @@ export const I18N = {
         darkThemeHint: 'Low-brightness interface',
         language: 'Language',
         languageHint: 'Interface and menus',
+
+        updateTitle: 'Update available',
+        updateBody: 'Version {version} is downloaded. The app will restart to install it.',
+        updateNotes: "See what's new",
+        updateLater: 'Later',
+        updateRestart: 'Restart now',
+        updateNowTitle: 'Update ready',
+        updateNowHint: 'Version {version}',
+        updateNow: 'Update now',
 
         running: 'Generating…',
         runningRapport: 'Waiting for PDF-XChange Editor to close, then generating…',
