@@ -5,9 +5,17 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { parseEnv } from 'node:util';
 
 const require = createRequire(import.meta.url);
 const DRY = process.argv.includes('--dry-run');
+
+// A non-empty GH_TOKEN in the git-ignored .env wins over the environment.
+const ENV_FILE = new URL('../.env', import.meta.url);
+if (fs.existsSync(ENV_FILE)) {
+    const { GH_TOKEN } = parseEnv(fs.readFileSync(ENV_FILE, 'utf8'));
+    if (GH_TOKEN) process.env.GH_TOKEN = GH_TOKEN;
+}
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const step = (...args) => {
     console.log(`${DRY ? '[dry run] ' : '> '}git ${args.join(' ')}`);
@@ -32,11 +40,17 @@ if (branch !== 'dev') fail(`releases run from dev, current branch is ${branch}.`
 if (git('status', '--porcelain')) fail('there are uncommitted changes. Commit or stash them first.');
 if (!DRY && !process.env.GH_TOKEN) fail('GH_TOKEN is not set.');
 
-// dev must include origin/dev, and stable may only move forward.
-git('fetch', '--quiet', 'origin', 'dev', 'stable');
-const behind = git('rev-list', '--count', 'dev..origin/dev');
-if (behind !== '0') fail(`dev is ${behind} commit(s) behind origin/dev. Pull first.`);
-if (!isAncestor('origin/stable', 'dev')) fail('origin/stable has commits that dev does not. Merge them into dev first.');
+// dev must include origin/dev, and stable may only move forward. A branch
+// missing on origin (first release) is created by the pushes below.
+const onOrigin = (name) => git('ls-remote', '--heads', 'origin', name) !== '';
+const remote = { dev: onOrigin('dev'), stable: onOrigin('stable') };
+const fetched = Object.keys(remote).filter((name) => remote[name]);
+if (fetched.length) git('fetch', '--quiet', 'origin', ...fetched);
+if (remote.dev) {
+    const behind = git('rev-list', '--count', 'dev..origin/dev');
+    if (behind !== '0') fail(`dev is ${behind} commit(s) behind origin/dev. Pull first.`);
+}
+if (remote.stable && !isAncestor('origin/stable', 'dev')) fail('origin/stable has commits that dev does not. Merge them into dev first.');
 
 const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 console.log(`Releasing ${version} from dev ${git('rev-parse', '--short', 'dev')}`);

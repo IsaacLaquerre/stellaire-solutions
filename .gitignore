@@ -4,3 +4,6 @@ dist/
 # Real client files must never be committed; tests use test/fixtures.
 *.xlsx
 !test/fixtures/*.xlsx
+
+# Local secrets (GH_TOKEN for npm run release).
+.env
