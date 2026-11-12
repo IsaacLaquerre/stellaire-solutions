@@ -1,6 +1,6 @@
-// Release: pushes dev, adds a commit named after the version (for example
-// v2.0.1) on stable with dev's files, then builds and publishes to GitHub
-// Releases. Usage: npm run release
+// Release: rebases dev onto stable when needed, adds a commit named after
+// the version (for example v2.0.1) on top of dev, moves stable to it, then
+// builds and publishes to GitHub Releases. Usage: npm run release
 // Add -- --dry-run to run the checks and print the steps only.
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -46,33 +46,44 @@ if (remote.dev) {
 
 const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const tag = `v${version}`;
-const devTree = git('rev-parse', 'dev^{tree}');
+const subject = (ref) => git('log', '-1', '--format=%s', ref);
+const isAncestor = (a, b) => {
+    try {
+        git('merge-base', '--is-ancestor', a, b);
+        return true;
+    } catch {
+        return false;
+    }
+};
 
-// stable must hold files from a dev commit, so it never gets direct changes.
-// If it already holds this version with dev's files, a failed run is resumed.
-let release = null;
-if (remote.stable) {
-    const stableTree = git('rev-parse', 'origin/stable^{tree}');
-    if (!git('log', '--format=%T', 'dev').split('\n').includes(stableTree)) {
-        fail('origin/stable has changes that are not on dev. Move them to dev first.');
-    }
-    if (git('log', '-1', '--format=%s', 'origin/stable') === tag) {
-        if (stableTree !== devTree) fail(`stable already holds ${tag}. Bump the version in package.json first.`);
-        release = git('rev-parse', 'origin/stable');
-    }
+// dev's commits are replayed on top of stable when stable is not in dev's
+// history (first release, or a commit made on stable directly).
+const rebase = remote.stable && !isAncestor('origin/stable', 'dev');
+// The version commit already on top of dev: a failed run is resumed.
+const resume = subject('dev') === tag;
+if (!resume && git('log', '--format=%s', 'dev').split('\n').includes(tag)) {
+    fail(`${tag} was already released. Bump the version in package.json first.`);
 }
 
 console.log(`Releasing ${tag} from dev ${git('rev-parse', '--short', 'dev')}`);
-step('push', 'origin', 'dev');
-
-// New commit on stable: dev's files, the previous release as parent, the version as message.
-if (!release) {
-    const parent = remote.stable ? 'origin/stable' : 'dev';
-    console.log(`${DRY ? '[dry run] ' : '> '}git commit-tree dev^{tree} -p ${parent} -m ${tag}`);
-    release = DRY ? '<new commit>' : git('commit-tree', devTree, '-p', parent, '-m', tag);
+if (rebase) {
+    console.log(`${DRY ? '[dry run] ' : '> '}git rebase origin/stable`);
+    if (!DRY) {
+        try {
+            execFileSync('git', ['rebase', 'origin/stable'], { stdio: 'inherit' });
+        } catch {
+            execFileSync('git', ['rebase', '--abort'], { stdio: 'ignore' });
+            fail('rebasing dev onto stable hit conflicts. Nothing was pushed.');
+        }
+    }
 }
-step('push', 'origin', `${release}:refs/heads/stable`);
-step('branch', '-f', 'stable', release);
+if (!resume) step('commit', '--allow-empty', '--quiet', '-m', tag);
+
+// A rebased dev replaces its history on origin, refused if origin/dev moved since the fetch.
+if (rebase && remote.dev) step('push', `--force-with-lease=refs/heads/dev:${git('rev-parse', 'origin/dev')}`, 'origin', 'dev');
+else step('push', 'origin', 'dev');
+step('push', 'origin', 'dev:stable');
+step('branch', '-f', 'stable', 'dev');
 
 // The CLI is run with node directly: Node 22 won't spawn .cmd files without a shell.
 const builderPkg = require.resolve('electron-builder/package.json');
