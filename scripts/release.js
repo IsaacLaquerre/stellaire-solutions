@@ -1,5 +1,6 @@
-// Release: fast-forwards stable to dev, pushes both, then builds and
-// publishes to GitHub Releases. Usage: npm run release
+// Release: pushes dev, adds a commit named after the version (for example
+// v2.0.1) on stable with dev's files, then builds and publishes to GitHub
+// Releases. Usage: npm run release
 // Add -- --dry-run to run the checks and print the steps only.
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -25,14 +26,6 @@ const fail = (message) => {
     console.error(`Release stopped: ${message}`);
     process.exit(1);
 };
-const isAncestor = (a, b) => {
-    try {
-        git('merge-base', '--is-ancestor', a, b);
-        return true;
-    } catch {
-        return false;
-    }
-};
 
 // Runs from dev with a clean working tree.
 const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
@@ -40,8 +33,8 @@ if (branch !== 'dev') fail(`releases run from dev, current branch is ${branch}.`
 if (git('status', '--porcelain')) fail('there are uncommitted changes. Commit or stash them first.');
 if (!DRY && !process.env.GH_TOKEN) fail('GH_TOKEN is not set.');
 
-// dev must include origin/dev, and stable may only move forward. A branch
-// missing on origin (first release) is created by the pushes below.
+// dev must include origin/dev. A branch missing on origin (first release)
+// is created by the pushes below.
 const onOrigin = (name) => git('ls-remote', '--heads', 'origin', name) !== '';
 const remote = { dev: onOrigin('dev'), stable: onOrigin('stable') };
 const fetched = Object.keys(remote).filter((name) => remote[name]);
@@ -50,14 +43,36 @@ if (remote.dev) {
     const behind = git('rev-list', '--count', 'dev..origin/dev');
     if (behind !== '0') fail(`dev is ${behind} commit(s) behind origin/dev. Pull first.`);
 }
-if (remote.stable && !isAncestor('origin/stable', 'dev')) fail('origin/stable has commits that dev does not. Merge them into dev first.');
 
 const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-console.log(`Releasing ${version} from dev ${git('rev-parse', '--short', 'dev')}`);
+const tag = `v${version}`;
+const devTree = git('rev-parse', 'dev^{tree}');
 
+// stable must hold files from a dev commit, so it never gets direct changes.
+// If it already holds this version with dev's files, a failed run is resumed.
+let release = null;
+if (remote.stable) {
+    const stableTree = git('rev-parse', 'origin/stable^{tree}');
+    if (!git('log', '--format=%T', 'dev').split('\n').includes(stableTree)) {
+        fail('origin/stable has changes that are not on dev. Move them to dev first.');
+    }
+    if (git('log', '-1', '--format=%s', 'origin/stable') === tag) {
+        if (stableTree !== devTree) fail(`stable already holds ${tag}. Bump the version in package.json first.`);
+        release = git('rev-parse', 'origin/stable');
+    }
+}
+
+console.log(`Releasing ${tag} from dev ${git('rev-parse', '--short', 'dev')}`);
 step('push', 'origin', 'dev');
-step('push', 'origin', 'dev:stable');
-step('branch', '-f', 'stable', 'dev');
+
+// New commit on stable: dev's files, the previous release as parent, the version as message.
+if (!release) {
+    const parent = remote.stable ? 'origin/stable' : 'dev';
+    console.log(`${DRY ? '[dry run] ' : '> '}git commit-tree dev^{tree} -p ${parent} -m ${tag}`);
+    release = DRY ? '<new commit>' : git('commit-tree', devTree, '-p', parent, '-m', tag);
+}
+step('push', 'origin', `${release}:refs/heads/stable`);
+step('branch', '-f', 'stable', release);
 
 // The CLI is run with node directly: Node 22 won't spawn .cmd files without a shell.
 const builderPkg = require.resolve('electron-builder/package.json');
