@@ -1,13 +1,24 @@
 // Main window, locked down: sandboxed renderer, no navigation, no popups.
 import { BrowserWindow, session, shell } from 'electron';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ROOT = new URL('../', import.meta.url);
 export const INDEX_FILE = fileURLToPath(new URL('renderer/index.html', ROOT));
-export const INDEX_URL = pathToFileURL(INDEX_FILE).href;
+
+// Compares paths, not URL strings: Node and Chromium encode some
+// characters differently (for example "~" in short Windows paths).
+const samePath = (a, b) => (process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b);
 
 // Only the app's own page may talk to the main process.
-export const isTrustedSender = (frame) => Boolean(frame) && frame.url === INDEX_URL;
+export function isTrustedSender(frame) {
+    if (!frame || typeof frame.url !== 'string' || !frame.url.startsWith('file:')) return false;
+    try {
+        return samePath(path.resolve(fileURLToPath(frame.url)), path.resolve(INDEX_FILE));
+    } catch {
+        return false;
+    }
+}
 
 export function createWindow() {
     const win = new BrowserWindow({
