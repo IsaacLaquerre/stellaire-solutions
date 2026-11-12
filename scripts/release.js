@@ -100,6 +100,9 @@ if (upToDate) {
 // RELEASE_API_URL points the script at a fake API in tests.
 const API = process.env.RELEASE_API_URL || 'https://api.github.com';
 const { owner, repo } = pkg.build.publish;
+// build.publish.releaseType: "release" (default), "prerelease", or "draft" (left unpublished).
+const releaseType = pkg.build.publish.releaseType || 'release';
+const prerelease = releaseType === 'prerelease';
 const repoApi = `${API}/repos/${owner}/${repo}`;
 const commit = DRY ? git('rev-parse', 'dev') : git('rev-parse', 'stable');
 
@@ -178,18 +181,24 @@ if (!DRY) {
     console.log(`  release notes: ${notes}`);
     // Created here so electron-builder's parallel uploads find one release
     // instead of each trying to create it.
-    draft = await github('POST', `${repoApi}/releases`, { tag_name: tag, target_commitish: commit, name: version, body: notes, draft: true });
+    draft = await github('POST', `${repoApi}/releases`, { tag_name: tag, target_commitish: commit, name: version, body: notes, draft: true, prerelease });
 }
 
 // The CLI is run with node directly: Node 22 won't spawn .cmd files without a shell.
 const builderPkg = require.resolve('electron-builder/package.json');
 const cli = path.join(path.dirname(builderPkg), require(builderPkg).bin['electron-builder']);
 say('electron-builder --win --publish always (into the draft)');
-say(`publish draft release ${tag}`);
+say(releaseType === 'draft' ? `leave ${tag} as a draft (releaseType is "draft")` : `publish draft release ${tag}${prerelease ? ' as a pre-release' : ''}`);
 if (DRY) process.exit(0);
 const run = spawnSync(process.execPath, [cli, '--win', '--publish', 'always', '-c.publish.releaseType=draft'], { stdio: 'inherit' });
 if (run.status !== 0) fail(`electron-builder failed. The draft ${tag} stays hidden; run npm run release again to replace it.`);
 
 // Notes set again in case electron-builder replaced them while uploading.
-await github('PATCH', `${repoApi}/releases/${draft.id}`, { body: notes, draft: false, make_latest: 'true' });
-console.log(`Published ${tag}: https://github.com/${owner}/${repo}/releases/tag/${tag}`);
+// GitHub never marks a pre-release as the latest release.
+if (releaseType === 'draft') {
+    await github('PATCH', `${repoApi}/releases/${draft.id}`, { body: notes });
+    console.log(`Uploaded ${tag} as a draft (releaseType is "draft"); publish it on GitHub.`);
+    process.exit(0);
+}
+await github('PATCH', `${repoApi}/releases/${draft.id}`, { body: notes, draft: false, prerelease, make_latest: prerelease ? 'false' : 'true' });
+console.log(`Published ${tag}${prerelease ? ' as a pre-release' : ''}: https://github.com/${owner}/${repo}/releases/tag/${tag}`);
