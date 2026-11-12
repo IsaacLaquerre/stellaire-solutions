@@ -38,7 +38,7 @@
       "owner": "IsaacLaquerre",
       "repo": "stellaire-solutions",
       "private": false,
-      "releaseType": "release"
+      "releaseType": "prerelease"
     },
     "directories": {
       "output": "dist"
