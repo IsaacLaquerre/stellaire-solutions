@@ -1,8 +1,8 @@
 {
   "name": "stellaire-solutions",
   "productName": "Stellaire Solutions",
-  "version": "2.0.0",
-  "description": "Suite d'outils de génération de documents de chantier (DPM, Formulaire DPM, TakeOff, rapports d'inspection).",
+  "version": "1.0.1-alpha.1",
+  "description": "Stellaire Solutions",
   "main": "electron/main.js",
   "type": "module",
   "author": "Isaac",
@@ -30,9 +30,9 @@
     "electron-builder": "^26.18.0"
   },
   "build": {
-    "appId": "com.stellaire.solutions",
+    "appId": "com.consstellaire.stellaire-solutions",
     "productName": "Stellaire Solutions",
-    "artifactName": "Stellaire-Solutions-Setup-${version}.${ext}",
+    "artifactName": "Stellaire Solutions-Setup-${version}-${arch}.${ext}",
     "publish": {
       "provider": "github",
       "owner": "IsaacLaquerre",
@@ -51,11 +51,12 @@
       "assets/**/*",
       "package.json"
     ],
+    "icon": "assets/icon.ico",
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": true,
