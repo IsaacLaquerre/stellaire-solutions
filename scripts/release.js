@@ -102,7 +102,13 @@ const API = process.env.RELEASE_API_URL || 'https://api.github.com';
 const { owner, repo } = pkg.build.publish;
 const repoApi = `${API}/repos/${owner}/${repo}`;
 const commit = DRY ? git('rev-parse', 'dev') : git('rev-parse', 'stable');
-const notes = `**Full Changelog**: https://github.com/${owner}/${repo}/commits/${tag}`;
+
+// Notes compare with the previous version commit in stable's history, or
+// list all commits for the first release.
+const isVersion = (message) => /^v\d+\.\d+\.\d+\S*$/.test(message);
+const previous = git('log', '--format=%s', commit).split('\n').find((message) => isVersion(message) && message !== tag);
+const changelog = (from) => `**Full Changelog**: https://github.com/${owner}/${repo}/${from ? `compare/${from}...${tag}` : `commits/${tag}`}`;
+let notes = changelog(previous);
 
 async function github(method, url, body) {
     const res = await fetch(url, {
@@ -125,7 +131,8 @@ async function github(method, url, body) {
 // another commit is removed so GitHub recreates it on this one.
 say(`delete GitHub releases tagged ${tag}, if any`);
 say(`delete tag ${tag} if it is not on ${commit.slice(0, 7)}`);
-say(`create draft release ${tag} on ${commit.slice(0, 7)}, notes: ${notes}`);
+say(`create draft release ${tag} on ${commit.slice(0, 7)}`);
+if (DRY) say(`release notes: ${notes}`);
 let draft = null;
 if (!DRY) {
     const releases = (await github('GET', `${repoApi}/releases?per_page=100`)) || [];
@@ -138,6 +145,12 @@ if (!DRY) {
         console.log(`  deleting tag ${tag} (was on ${ref.object.sha.slice(0, 7)})`);
         await github('DELETE', `${repoApi}/git/refs/tags/${encodeURIComponent(tag)}`);
     }
+    // A compare link needs the previous tag on GitHub.
+    if (previous && !(await github('GET', `${repoApi}/git/ref/tags/${encodeURIComponent(previous)}`))) {
+        console.log(`  tag ${previous} is not on GitHub, the notes list all commits instead`);
+        notes = changelog(null);
+    }
+    console.log(`  release notes: ${notes}`);
     // Created here so electron-builder's parallel uploads find one release
     // instead of each trying to create it.
     draft = await github('POST', `${repoApi}/releases`, { tag_name: tag, target_commitish: commit, name: version, body: notes, draft: true });
