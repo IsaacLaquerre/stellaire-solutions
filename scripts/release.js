@@ -110,9 +110,22 @@ const previous = git('log', '--format=%s', commit).split('\n').find((message) =>
 const changelog = (from) => `**Full Changelog**: https://github.com/${owner}/${repo}/${from ? `compare/${from}...${tag}` : `commits/${tag}`}`;
 let notes = changelog(previous);
 
+// Retries network errors: GitHub closes connections left idle during the
+// build, and a retry opens a new one.
+async function send(method, url, options, attempts = 4) {
+    for (let attempt = 1; ; attempt++) {
+        try {
+            return await fetch(url, { method, ...options });
+        } catch (err) {
+            if (attempt >= attempts) fail(`GitHub ${method} ${url.slice(API.length)} failed: ${(err.cause && err.cause.message) || err.message}`);
+            console.log(`  GitHub ${method} failed (${(err.cause && err.cause.code) || err.message}), retrying`);
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
+    }
+}
+
 async function github(method, url, body) {
-    const res = await fetch(url, {
-        method,
+    const res = await send(method, url, {
         headers: {
             Authorization: `Bearer ${process.env.GH_TOKEN}`,
             Accept: 'application/vnd.github+json',
