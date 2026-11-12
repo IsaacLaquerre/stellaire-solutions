@@ -198,20 +198,17 @@ body {
   to   { opacity: 1; transform: none; }
 }
 
-.view-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--accent);
-  margin: 0 0 6px;
-}
-
 .view-title {
   font-size: clamp(22px, 3.4vw, 30px);
   font-weight: 650;
   letter-spacing: -0.015em;
   margin: 0 0 24px;
+}
+
+.view-lead {
+  font-size: 14.5px;
+  color: var(--ink-muted);
+  margin: -16px 0 24px;
 }
 
 .note {
