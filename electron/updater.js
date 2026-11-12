@@ -17,9 +17,9 @@ export const UPDATE_CHANNELS = {
 
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = false;
-// electron-builder only publishes latest.yml; a prerelease version would
-// otherwise make electron-updater ask for "<tag>.yml".
-autoUpdater.channel = 'latest';
+// No channel set: an alpha install then accepts newer alpha releases and
+// falls back from alpha.yml to the published latest.yml. Setting
+// channel = 'latest' makes it skip every alpha release.
 autoUpdater.on('error', (err) => console.log('[autoUpdater] error:', err && err.message));
 
 // Downloaded update waiting for the user: { version, url } or null.
