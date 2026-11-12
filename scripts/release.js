@@ -144,6 +144,7 @@ async function github(method, url, body) {
 // another commit is removed so GitHub recreates it on this one.
 say(`delete GitHub releases tagged ${tag}, if any`);
 say(`delete tag ${tag} if it is not on ${commit.slice(0, 7)}`);
+say('publish leftover drafts of earlier versions that have their latest.yml');
 say(`create draft release ${tag} on ${commit.slice(0, 7)}`);
 if (DRY) say(`release notes: ${notes}`);
 let draft = null;
@@ -157,6 +158,17 @@ if (!DRY) {
     if (ref && ref.object && ref.object.sha !== commit) {
         console.log(`  deleting tag ${tag} (was on ${ref.object.sha.slice(0, 7)})`);
         await github('DELETE', `${repoApi}/git/refs/tags/${encodeURIComponent(tag)}`);
+    }
+    // Drafts of earlier versions left by a run that failed at the end are
+    // published, once their upload is complete (latest.yml is there).
+    const released = new Set(git('log', '--format=%s', commit).split('\n').filter(isVersion));
+    for (const release of releases.filter((r) => r.draft && r.tag_name !== tag && released.has(r.tag_name))) {
+        if (!(release.assets || []).some((asset) => asset.name === 'latest.yml')) {
+            console.log(`  draft ${release.tag_name} has no latest.yml, left as a draft`);
+            continue;
+        }
+        console.log(`  publishing leftover draft ${release.tag_name}`);
+        await github('PATCH', `${repoApi}/releases/${release.id}`, { draft: false, make_latest: 'false' });
     }
     // A compare link needs the previous tag on GitHub.
     if (previous && !(await github('GET', `${repoApi}/git/ref/tags/${encodeURIComponent(previous)}`))) {
