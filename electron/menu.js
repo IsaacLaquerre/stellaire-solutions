@@ -6,13 +6,13 @@ export const MENU_LABELS = {
         file: 'Fichier', openOutput: 'Ouvrir le dossier de sortie', quit: 'Quitter',
         view: 'Affichage', reload: 'Recharger', devtools: 'Outils de développement',
         zoomIn: 'Zoom avant', zoomOut: 'Zoom arrière', zoomReset: 'Zoom par défaut', fullscreen: 'Plein écran',
-        help: 'Aide', about: 'À propos', version: 'Version'
+        help: 'Aide', about: 'À propos', version: 'Version', createdBy: 'Créé par Isaac Laquerre'
     },
     en: {
         file: 'File', openOutput: 'Open output folder', quit: 'Quit',
         view: 'View', reload: 'Reload', devtools: 'Developer tools',
         zoomIn: 'Zoom in', zoomOut: 'Zoom out', zoomReset: 'Reset zoom', fullscreen: 'Full screen',
-        help: 'Help', about: 'About', version: 'Version'
+        help: 'Help', about: 'About', version: 'Version', createdBy: 'Created by Isaac Laquerre'
     }
 };
 
@@ -51,7 +51,7 @@ export function buildMenu(lang, { outputDir }) {
                         type: 'info',
                         title: t.about,
                         message: app.getName(),
-                        detail: `${t.version} ${app.getVersion()}`
+                        detail: `${t.version} ${app.getVersion()}\n${t.createdBy}`
                     })
                 }
             ]
