@@ -1,7 +1,8 @@
 // Release: rebases dev onto stable when needed, adds a commit named after
 // the version (for example v2.0.1) on top of dev, moves stable to it, then
-// builds and publishes to GitHub Releases. Usage: npm run release
-// Add -- --dry-run to run the checks and print the steps only.
+// builds and publishes to GitHub Releases. When stable already holds this
+// version, nothing is committed or pushed and the release is published again.
+// Usage: npm run release. Add -- --dry-run to run the checks and print the steps only.
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -17,9 +18,10 @@ if (fs.existsSync(ENV_FILE)) {
     const { GH_TOKEN } = parseEnv(fs.readFileSync(ENV_FILE, 'utf8'));
     if (GH_TOKEN) process.env.GH_TOKEN = GH_TOKEN;
 }
+const say = (text) => console.log(`${DRY ? '[dry run] ' : '> '}${text}`);
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const step = (...args) => {
-    console.log(`${DRY ? '[dry run] ' : '> '}git ${args.join(' ')}`);
+    say(`git ${args.join(' ')}`);
     if (!DRY) execFileSync('git', args, { stdio: 'inherit' });
 };
 const fail = (message) => {
@@ -44,7 +46,8 @@ if (remote.dev) {
     if (behind !== '0') fail(`dev is ${behind} commit(s) behind origin/dev. Pull first.`);
 }
 
-const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const { version } = pkg;
 const tag = `v${version}`;
 const subject = (ref) => git('log', '-1', '--format=%s', ref);
 const isAncestor = (a, b) => {
@@ -56,39 +59,99 @@ const isAncestor = (a, b) => {
     }
 };
 
-// dev's commits are replayed on top of stable when stable is not in dev's
-// history (first release, or a commit made on stable directly).
-const rebase = remote.stable && !isAncestor('origin/stable', 'dev');
-// The version commit already on top of dev: a failed run is resumed.
-const resume = subject('dev') === tag;
-if (!resume && git('log', '--format=%s', 'dev').split('\n').includes(tag)) {
-    fail(`${tag} was already released. Bump the version in package.json first.`);
-}
+// stable and dev are the same commit, and it is this version: nothing to push.
+const upToDate = remote.stable && git('rev-parse', 'origin/stable') === git('rev-parse', 'dev') && subject('dev') === tag;
 
-console.log(`Releasing ${tag} from dev ${git('rev-parse', '--short', 'dev')}`);
-if (rebase) {
-    console.log(`${DRY ? '[dry run] ' : '> '}git rebase origin/stable`);
-    if (!DRY) {
-        try {
-            execFileSync('git', ['rebase', 'origin/stable'], { stdio: 'inherit' });
-        } catch {
-            execFileSync('git', ['rebase', '--abort'], { stdio: 'ignore' });
-            fail('rebasing dev onto stable hit conflicts. Nothing was pushed.');
+if (upToDate) {
+    console.log(`stable already holds ${tag} (${git('rev-parse', '--short', 'dev')}). Publishing the release again.`);
+} else {
+    // dev's commits are replayed on top of stable when stable is not in dev's
+    // history (first release, or a commit made on stable directly).
+    const rebase = remote.stable && !isAncestor('origin/stable', 'dev');
+    // The version commit already on top of dev: a failed run is resumed.
+    const resume = subject('dev') === tag;
+    if (!resume && git('log', '--format=%s', 'dev').split('\n').includes(tag)) {
+        fail(`${tag} was already released. Bump the version in package.json first.`);
+    }
+
+    console.log(`Releasing ${tag} from dev ${git('rev-parse', '--short', 'dev')}`);
+    if (rebase) {
+        say('git rebase origin/stable');
+        if (!DRY) {
+            try {
+                execFileSync('git', ['rebase', 'origin/stable'], { stdio: 'inherit' });
+            } catch {
+                execFileSync('git', ['rebase', '--abort'], { stdio: 'ignore' });
+                fail('rebasing dev onto stable hit conflicts. Nothing was pushed.');
+            }
         }
     }
-}
-if (!resume) step('commit', '--allow-empty', '--quiet', '-m', tag);
+    if (!resume) step('commit', '--allow-empty', '--quiet', '-m', tag);
 
-// A rebased dev replaces its history on origin, refused if origin/dev moved since the fetch.
-if (rebase && remote.dev) step('push', `--force-with-lease=refs/heads/dev:${git('rev-parse', 'origin/dev')}`, 'origin', 'dev');
-else step('push', 'origin', 'dev');
-step('push', 'origin', 'dev:stable');
-step('branch', '-f', 'stable', 'dev');
+    // A rebased dev replaces its history on origin, refused if origin/dev moved since the fetch.
+    if (rebase && remote.dev) step('push', `--force-with-lease=refs/heads/dev:${git('rev-parse', 'origin/dev')}`, 'origin', 'dev');
+    else step('push', 'origin', 'dev');
+    step('push', 'origin', 'dev:stable');
+    step('branch', '-f', 'stable', 'dev');
+}
+
+// ------------------------------------------------------ GitHub release ----
+
+// RELEASE_API_URL points the script at a fake API in tests.
+const API = process.env.RELEASE_API_URL || 'https://api.github.com';
+const { owner, repo } = pkg.build.publish;
+const repoApi = `${API}/repos/${owner}/${repo}`;
+const commit = DRY ? git('rev-parse', 'dev') : git('rev-parse', 'stable');
+const notes = `**Full Changelog**: https://github.com/${owner}/${repo}/commits/${tag}`;
+
+async function github(method, url, body) {
+    const res = await fetch(url, {
+        method,
+        headers: {
+            Authorization: `Bearer ${process.env.GH_TOKEN}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'User-Agent': `${repo}-release`,
+            ...(body ? { 'Content-Type': 'application/json' } : {})
+        },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.status === 404 && method === 'GET') return null;
+    if (!res.ok) fail(`GitHub ${method} ${url.slice(API.length)} answered ${res.status}: ${await res.text()}`);
+    return res.status === 204 ? null : res.json();
+}
+
+// Any release with this tag (drafts included) is replaced, and a tag on
+// another commit is removed so GitHub recreates it on this one.
+say(`delete GitHub releases tagged ${tag}, if any`);
+say(`delete tag ${tag} if it is not on ${commit.slice(0, 7)}`);
+say(`create draft release ${tag} on ${commit.slice(0, 7)}, notes: ${notes}`);
+let draft = null;
+if (!DRY) {
+    const releases = (await github('GET', `${repoApi}/releases?per_page=100`)) || [];
+    for (const release of releases.filter((r) => r.tag_name === tag)) {
+        console.log(`  deleting ${release.draft ? 'draft ' : ''}release ${release.id}`);
+        await github('DELETE', `${repoApi}/releases/${release.id}`);
+    }
+    const ref = await github('GET', `${repoApi}/git/ref/tags/${encodeURIComponent(tag)}`);
+    if (ref && ref.object && ref.object.sha !== commit) {
+        console.log(`  deleting tag ${tag} (was on ${ref.object.sha.slice(0, 7)})`);
+        await github('DELETE', `${repoApi}/git/refs/tags/${encodeURIComponent(tag)}`);
+    }
+    // Created here so electron-builder's parallel uploads find one release
+    // instead of each trying to create it.
+    draft = await github('POST', `${repoApi}/releases`, { tag_name: tag, target_commitish: commit, name: version, body: notes, draft: true });
+}
 
 // The CLI is run with node directly: Node 22 won't spawn .cmd files without a shell.
 const builderPkg = require.resolve('electron-builder/package.json');
 const cli = path.join(path.dirname(builderPkg), require(builderPkg).bin['electron-builder']);
-console.log(`${DRY ? '[dry run] ' : '> '}electron-builder --win --publish always`);
+say('electron-builder --win --publish always (into the draft)');
+say(`publish draft release ${tag}`);
 if (DRY) process.exit(0);
-const run = spawnSync(process.execPath, [cli, '--win', '--publish', 'always'], { stdio: 'inherit' });
-process.exit(run.status === null ? 1 : run.status);
+const run = spawnSync(process.execPath, [cli, '--win', '--publish', 'always', '-c.publish.releaseType=draft'], { stdio: 'inherit' });
+if (run.status !== 0) fail(`electron-builder failed. The draft ${tag} stays hidden; run npm run release again to replace it.`);
+
+// Notes set again in case electron-builder replaced them while uploading.
+await github('PATCH', `${repoApi}/releases/${draft.id}`, { body: notes, draft: false, make_latest: 'true' });
+console.log(`Published ${tag}: https://github.com/${owner}/${repo}/releases/tag/${tag}`);
